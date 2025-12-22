@@ -1,7 +1,7 @@
 use approx::assert_relative_eq;
 
-use box2d_lite_rs::math::{Mat22, Vec2};
 use box2d_lite_rs::math::utils::sign_nonzero;
+use box2d_lite_rs::math::{Mat22, Vec2};
 
 #[test]
 fn public_math_api_smoke() {

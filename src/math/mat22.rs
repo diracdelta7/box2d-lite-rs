@@ -11,14 +11,14 @@ pub struct Mat22 {
 impl Mat22 {
     #[inline]
     pub const fn new(col1: Vec2, col2: Vec2) -> Self {
-        Self{ col1, col2 }
+        Self { col1, col2 }
     }
 
     #[inline]
     pub fn from_angle(angle: f32) -> Self {
         let c = angle.cos();
         let s = angle.sin();
-        Self::new( Vec2::new(c, s), Vec2::new(-s, c))
+        Self::new(Vec2::new(c, s), Vec2::new(-s, c))
     }
 
     #[inline]
@@ -43,10 +43,7 @@ impl Mat22 {
         );
 
         let det = 1.0 / det;
-        Self::new(
-            Vec2::new( det * d, -det * c),
-            Vec2::new(-det *b,   det * a),
-        )
+        Self::new(Vec2::new(det * d, -det * c), Vec2::new(-det * b, det * a))
     }
 
     #[inline]
@@ -57,28 +54,25 @@ impl Mat22 {
 
 impl Mul<Vec2> for Mat22 {
     type Output = Vec2;
-    #[inline] fn mul(self, rhs: Vec2) -> Vec2 {
+    #[inline]
+    fn mul(self, rhs: Vec2) -> Vec2 {
         self.col1 * rhs.x + self.col2 * rhs.y
     }
 }
 
 impl Add for Mat22 {
     type Output = Self;
-    #[inline] fn add(self, rhs: Self) -> Self {
-        Self::new(
-            self.col1 + rhs.col1,
-            self.col2 + rhs.col2,
-        )
+    #[inline]
+    fn add(self, rhs: Self) -> Self {
+        Self::new(self.col1 + rhs.col1, self.col2 + rhs.col2)
     }
 }
 
 impl Mul for Mat22 {
     type Output = Self;
-    #[inline] fn mul(self, rhs: Self) -> Self {
-        Self::new(
-            self * rhs.col1,
-            self * rhs.col2,
-        )
+    #[inline]
+    fn mul(self, rhs: Self) -> Self {
+        Self::new(self * rhs.col1, self * rhs.col2)
     }
 }
 

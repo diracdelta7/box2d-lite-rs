@@ -1,4 +1,4 @@
-use core::ops::{Add, AddAssign, Sub, SubAssign, Mul, MulAssign, Neg};
+use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Vec2 {
@@ -9,7 +9,7 @@ pub struct Vec2 {
 impl Vec2 {
     #[inline]
     pub const fn new(x: f32, y: f32) -> Self {
-        Self{ x, y }
+        Self { x, y }
     }
 
     #[inline]
@@ -51,41 +51,67 @@ impl Vec2 {
 
 impl Neg for Vec2 {
     type Output = Self;
-    #[inline] fn neg(self) -> Self { Self::new(-self.x, -self.y) }
+    #[inline]
+    fn neg(self) -> Self {
+        Self::new(-self.x, -self.y)
+    }
 }
 
 impl Add for Vec2 {
     type Output = Self;
-    #[inline] fn add(self, rhs: Self) -> Self { Self::new(self.x + rhs.x, self.y + rhs.y) }
+    #[inline]
+    fn add(self, rhs: Self) -> Self {
+        Self::new(self.x + rhs.x, self.y + rhs.y)
+    }
 }
 
 impl AddAssign for Vec2 {
-    #[inline] fn add_assign(&mut self, rhs: Self) { self.x += rhs.x; self.y += rhs.y; }
+    #[inline]
+    fn add_assign(&mut self, rhs: Self) {
+        self.x += rhs.x;
+        self.y += rhs.y;
+    }
 }
 
 impl Sub for Vec2 {
     type Output = Self;
-    #[inline] fn sub(self, rhs: Self) -> Self { Self::new(self.x - rhs.x, self.y - rhs.y) }
+    #[inline]
+    fn sub(self, rhs: Self) -> Self {
+        Self::new(self.x - rhs.x, self.y - rhs.y)
+    }
 }
 
 impl SubAssign for Vec2 {
-    #[inline] fn sub_assign(&mut self, rhs: Self) { self.x -= rhs.x; self.y -= rhs.y; }
+    #[inline]
+    fn sub_assign(&mut self, rhs: Self) {
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+    }
 }
 
 impl Mul<f32> for Vec2 {
     type Output = Self;
-    #[inline] fn mul(self, rhs: f32) -> Self { Self::new(self.x * rhs, self.y * rhs) }
+    #[inline]
+    fn mul(self, rhs: f32) -> Self {
+        Self::new(self.x * rhs, self.y * rhs)
+    }
 }
 
 impl MulAssign<f32> for Vec2 {
-    #[inline] fn mul_assign(&mut self, rhs: f32) { self.x *= rhs; self.y *= rhs; }
+    #[inline]
+    fn mul_assign(&mut self, rhs: f32) {
+        self.x *= rhs;
+        self.y *= rhs;
+    }
 }
 
 impl Mul<Vec2> for f32 {
     type Output = Vec2;
-    #[inline] fn mul(self, rhs: Vec2) -> Vec2 { Vec2::new(self * rhs.x, self * rhs.y) }
+    #[inline]
+    fn mul(self, rhs: Vec2) -> Vec2 {
+        Vec2::new(self * rhs.x, self * rhs.y)
+    }
 }
-
 
 // All tests are written by ChatGPT 5.2.
 #[cfg(test)]

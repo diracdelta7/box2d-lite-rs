@@ -16,7 +16,6 @@ pub fn random_range(rng: &mut impl Rng, lo: f32, hi: f32) -> f32 {
     rng.gen_range(lo..=hi)
 }
 
-
 // All tests are written by ChatGPT 5.2.
 #[cfg(test)]
 mod tests {

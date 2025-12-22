@@ -1,10 +1,8 @@
 use crate::dynamics::{Body, BodyDef};
 use crate::math::Vec2;
 
-
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct BodyHandle(pub usize);
-
 
 pub struct World {
     bodies: Vec<Body>,
@@ -70,7 +68,6 @@ impl World {
     // - pre-step contacts/joints using inv_dt
     // - iterative solver loop using self.iterations
 }
-
 
 // All tests are written by ChatGPT 5.2.
 #[cfg(test)]

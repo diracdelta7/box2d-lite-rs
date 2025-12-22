@@ -21,7 +21,6 @@ impl Default for BodyDef {
     }
 }
 
-
 #[derive(Copy, Clone, Debug)]
 pub struct Body {
     pub position: Vec2,
@@ -56,10 +55,7 @@ impl Body {
 
                 let inv_mass = 1.0 / mass;
 
-                let i = mass
-                    * (def.width.x * def.width.x
-                     + def.width.y * def.width.y)
-                    / 12.0;
+                let i = mass * (def.width.x * def.width.x + def.width.y * def.width.y) / 12.0;
                 let inv_i = 1.0 / i;
 
                 (inv_mass, inv_i)
@@ -84,7 +80,6 @@ impl Body {
         }
     }
 }
-
 
 // All tests are written by ChatGPT 5.2.
 #[cfg(test)]
