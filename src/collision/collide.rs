@@ -13,7 +13,7 @@ use crate::math::{Mat22, Vec2, sign_nonzero};
 // e2 |        | e4  --> x
 //    |        |
 //   v3 ------ v4
-//        e3#[repr(u8)]
+//        e3#
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Axis {
@@ -227,7 +227,7 @@ pub fn collide(
 
     if face_b.y > relative_tol * separation + absolute_tol * hb.y {
         axis = Axis::FaceBY;
-        // separation = face_b.y;
+        separation = face_b.y;
         normal = if db.y > 0.0 { rot_b.col2 } else { -rot_b.col2 };
     }
 

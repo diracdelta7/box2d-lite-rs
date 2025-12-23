@@ -97,7 +97,7 @@ impl Arbiter {
             body1: body1,
             body2: body2,
 
-            friction: 0.0,
+            friction: (world.body(body1).friction * world.body(body2).friction).sqrt(),
         }
     }
 
@@ -184,7 +184,7 @@ impl Arbiter {
         };
         let (b1, b2) = bodies_two_mut(bodies, b1, b2);
 
-        for c in &mut self.contacts {
+        for c in &mut self.contacts[..self.num_contacts] {
             c.r1 = c.position - b1.position;
             c.r2 = c.position - b2.position;
 
