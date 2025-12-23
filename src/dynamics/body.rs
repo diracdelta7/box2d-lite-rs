@@ -81,7 +81,6 @@ impl Body {
     }
 }
 
-// All tests are written by ChatGPT 5.2.
 #[cfg(test)]
 mod tests {
     use super::*;

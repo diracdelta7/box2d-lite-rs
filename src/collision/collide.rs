@@ -343,3 +343,61 @@ pub fn collide(
 
     num_contacts
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_relative_eq;
+
+    #[test]
+    fn edge_number_from_u8_is_defensive() {
+        assert_eq!(EdgeNumber::from_u8(0), EdgeNumber::NoEdge);
+        assert_eq!(EdgeNumber::from_u8(1), EdgeNumber::Edge1);
+        assert_eq!(EdgeNumber::from_u8(2), EdgeNumber::Edge2);
+        assert_eq!(EdgeNumber::from_u8(3), EdgeNumber::Edge3);
+        assert_eq!(EdgeNumber::from_u8(4), EdgeNumber::Edge4);
+        assert_eq!(EdgeNumber::from_u8(200), EdgeNumber::NoEdge);
+    }
+
+    #[test]
+    fn flip_swaps_edges() {
+        let mut fp = FeaturePair::new(
+            EdgeNumber::Edge1,
+            EdgeNumber::Edge2,
+            EdgeNumber::Edge3,
+            EdgeNumber::Edge4,
+        );
+        flip(&mut fp);
+        assert_eq!(fp.in_edge1, EdgeNumber::Edge3);
+        assert_eq!(fp.out_edge1, EdgeNumber::Edge4);
+        assert_eq!(fp.in_edge2, EdgeNumber::Edge1);
+        assert_eq!(fp.out_edge2, EdgeNumber::Edge2);
+    }
+
+    #[test]
+    fn clip_segment_to_line_clips_one_point() {
+        // Line: x = 0.5, keep points with x <= 0.5
+        let normal = Vec2::new(1.0, 0.0);
+        let offset = 0.5;
+        let fp0 = FeaturePair::default();
+        let fp1 = FeaturePair::default();
+        let v_in = [
+            ClipVertex {
+                v: Vec2::new(0.0, 0.0),
+                fp: fp0,
+            },
+            ClipVertex {
+                v: Vec2::new(1.0, 0.0),
+                fp: fp1,
+            },
+        ];
+        let mut v_out = [ClipVertex::default(); 2];
+        let n = clip_segment_to_line(&mut v_out, &v_in, normal, offset, EdgeNumber::Edge1);
+
+        // One is inside, and one intersection point.
+        assert_eq!(n, 2);
+        assert_relative_eq!(v_out[0].v.x, 0.0, epsilon = 1e-6);
+        assert_relative_eq!(v_out[1].v.x, 0.5, epsilon = 1e-6);
+        assert_relative_eq!(v_out[1].v.y, 0.0, epsilon = 1e-6);
+    }
+}

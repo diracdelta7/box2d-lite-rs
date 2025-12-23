@@ -94,7 +94,7 @@ impl World {
         let n = self.bodies.len();
         for i in 0..n {
             let bi = BodyHandle(i);
-            for j in i+1..n {
+            for j in i + 1..n {
                 let bj = BodyHandle(j);
 
                 if self.bodies[i].inv_mass == 0.0 && self.bodies[j].inv_mass == 0.0 {
@@ -188,7 +188,6 @@ pub fn bodies_two_mut(bodies: &mut [Body], a: BodyHandle, b: BodyHandle) -> (&mu
     if a.0 < b.0 { (bi, bj) } else { (bj, bi) }
 }
 
-// All tests are written by ChatGPT 5.2.
 #[cfg(test)]
 mod tests {
     use super::*;

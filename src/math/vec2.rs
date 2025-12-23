@@ -113,7 +113,6 @@ impl Mul<Vec2> for f32 {
     }
 }
 
-// All tests are written by ChatGPT 5.2.
 #[cfg(test)]
 mod tests {
     use super::*;

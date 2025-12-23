@@ -76,7 +76,6 @@ impl Mul for Mat22 {
     }
 }
 
-// All tests are written by ChatGPT 5.2.
 #[cfg(test)]
 mod tests {
     use super::*;

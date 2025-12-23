@@ -249,3 +249,67 @@ impl Arbiter {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_relative_eq;
+
+    #[test]
+    fn feature_pair_key_roundtrips() {
+        let fp = FeaturePair::new(
+            EdgeNumber::Edge1,
+            EdgeNumber::Edge2,
+            EdgeNumber::Edge3,
+            EdgeNumber::Edge4,
+        );
+        let k = fp.key();
+        let fp2 = FeaturePair::from_key(k);
+        assert_eq!(fp, fp2);
+    }
+
+    #[test]
+    fn arbiter_key_orders_handles() {
+        let a = BodyHandle(5);
+        let b = BodyHandle(2);
+        let key = ArbiterKey::new(a, b);
+        assert_eq!(key.body1, b);
+        assert_eq!(key.body2, a);
+    }
+
+    #[test]
+    fn arbiter_update_warm_starting_copies_impulses() {
+        let mut arb = Arbiter {
+            contacts: [Contact::default(); MAX_POINTS],
+            num_contacts: 1,
+            body1: BodyHandle(0),
+            body2: BodyHandle(1),
+            friction: 0.0,
+        };
+        arb.contacts[0].feature = FeaturePair::new(
+            EdgeNumber::Edge1,
+            EdgeNumber::Edge2,
+            EdgeNumber::Edge3,
+            EdgeNumber::Edge4,
+        );
+        arb.contacts[0].pn = 1.25;
+        arb.contacts[0].pt = -0.5;
+        arb.contacts[0].pnb = 0.75;
+
+        let mut new_c = Contact::default();
+        new_c.feature = arb.contacts[0].feature;
+        new_c.pn = 0.0;
+        new_c.pt = 0.0;
+        new_c.pnb = 0.0;
+
+        arb.update(&[new_c], true);
+        assert_relative_eq!(arb.contacts[0].pn, 1.25);
+        assert_relative_eq!(arb.contacts[0].pt, -0.5);
+        assert_relative_eq!(arb.contacts[0].pnb, 0.75);
+
+        arb.update(&[new_c], false);
+        assert_relative_eq!(arb.contacts[0].pn, 0.0);
+        assert_relative_eq!(arb.contacts[0].pt, 0.0);
+        assert_relative_eq!(arb.contacts[0].pnb, 0.0);
+    }
+}
