@@ -2,6 +2,7 @@
 name = "box2d-lite-rs"
 version = "0.1.0"
 edition = "2024"
+license = "MIT"
 
 [dependencies]
 approx = "0.5"
