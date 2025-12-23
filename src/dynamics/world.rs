@@ -94,7 +94,7 @@ impl World {
         let n = self.bodies.len();
         for i in 0..n {
             let bi = BodyHandle(i);
-            for j in i..n {
+            for j in i+1..n {
                 let bj = BodyHandle(j);
 
                 if self.bodies[i].inv_mass == 0.0 && self.bodies[j].inv_mass == 0.0 {
