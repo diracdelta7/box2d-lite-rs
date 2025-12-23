@@ -1,22 +1,60 @@
-use crate::dynamics::{Body, BodyDef};
+use crate::collision::{Arbiter, ArbiterKey};
+use crate::dynamics::{Body, BodyDef, Joint, JointDef};
 use crate::math::Vec2;
+use std::collections::BTreeMap;
+use std::collections::btree_map::Entry;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub struct BodyHandle(pub usize);
 
+#[repr(transparent)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, PartialOrd, Ord)]
+pub struct JointHandle(pub usize);
+
+#[derive(Copy, Clone, Debug)]
+pub struct WorldConfig {
+    pub accumulate_impulses: bool,
+    pub warm_starting: bool,
+    pub position_correction: bool,
+}
+
+impl Default for WorldConfig {
+    fn default() -> Self {
+        Self {
+            accumulate_impulses: true,
+            warm_starting: true,
+            position_correction: true,
+        }
+    }
+}
+
 pub struct World {
-    bodies: Vec<Body>,
-    gravity: Vec2,
-    iterations: usize,
+    pub gravity: Vec2,
+    pub iterations: u32,
+    pub config: WorldConfig,
+    pub bodies: Vec<Body>,
+    pub joints: Vec<Joint>,
+    pub arbiters: BTreeMap<ArbiterKey, Arbiter>,
 }
 
 impl World {
     #[inline]
-    pub fn new(gravity: Vec2, iterations: usize) -> Self {
+    pub fn new(gravity: Vec2, iterations: u32) -> Self {
         Self {
             bodies: Vec::new(),
-            gravity: gravity,
-            iterations: iterations,
+            joints: Vec::new(),
+            arbiters: BTreeMap::new(),
+            gravity,
+            iterations,
+            config: WorldConfig::default(),
+        }
+    }
+
+    pub fn with_config(gravity: Vec2, iterations: u32, config: WorldConfig) -> Self {
+        Self {
+            config,
+            ..Self::new(gravity, iterations)
         }
     }
 
@@ -34,28 +72,102 @@ impl World {
         &mut self.bodies[h.0]
     }
 
+    pub fn bodies_two_mut(&mut self, a: BodyHandle, b: BodyHandle) -> (&mut Body, &mut Body) {
+        let bodies = &mut self.bodies;
+        bodies_two_mut(bodies, a, b)
+    }
+
+    pub fn create_joint(&mut self, def: JointDef) -> JointHandle {
+        let id = self.joints.len();
+        self.joints.push(Joint::from_def(&self, def));
+        JointHandle(id)
+    }
+
+    pub fn clear(&mut self) {
+        self.bodies.clear();
+        self.joints.clear();
+        self.arbiters.clear();
+    }
+
     pub fn broad_phase(&mut self) {
-        // TODO: later. For now, do nothing.
+        // O(n^2) broad-phase
+        let n = self.bodies.len();
+        for i in 0..n {
+            let bi = BodyHandle(i);
+            for j in i..n {
+                let bj = BodyHandle(j);
+
+                if self.bodies[i].inv_mass == 0.0 && self.bodies[j].inv_mass == 0.0 {
+                    continue;
+                }
+
+                let new_arb = Arbiter::new(bi, bj, &self);
+                let key = ArbiterKey::new(bi, bj);
+
+                if new_arb.num_contacts > 0 {
+                    match self.arbiters.entry(key) {
+                        Entry::Vacant(e) => {
+                            e.insert(new_arb);
+                        }
+                        Entry::Occupied(mut e) => {
+                            let arb = e.get_mut();
+                            arb.update(&new_arb.contacts, self.config.warm_starting);
+                        }
+                    }
+                } else {
+                    self.arbiters.remove(&key);
+                }
+            }
+        }
     }
 
     pub fn step(&mut self, dt: f32) {
-        if dt <= 0.0 {
-            return;
-        }
+        let inv_dt = if dt <= 0.0 { 0.0 } else { 1.0 / dt };
 
         self.broad_phase();
 
+        // Split world so we can borrow parts at the same time.
+        let World {
+            bodies,
+            joints,
+            arbiters,
+            gravity,
+            iterations,
+            config,
+            ..
+        } = self;
+
         // Integrate forces.
-        for b in &mut self.bodies {
+        for b in &mut bodies.iter_mut() {
             if b.inv_mass == 0.0 {
                 continue;
             }
-            b.velocity += dt * (self.gravity + b.inv_mass * b.force);
+            b.velocity += dt * (*gravity + b.inv_mass * b.force);
             b.angular_velocity += dt * b.inv_i * b.torque;
         }
 
+        // Perform pre-steps.
+        for arb in &mut arbiters.values_mut() {
+            arb.pre_step(inv_dt, bodies, config);
+        }
+
+        for joint in &mut joints.iter_mut() {
+            joint.pre_step(inv_dt, bodies, config);
+        }
+
+        // Perform iterations
+        for _ in 0..(*iterations as usize) {
+            for arb in arbiters.values_mut() {
+                arb.apply_impulse(bodies, config);
+            }
+
+            for joint in &mut joints.iter_mut() {
+                joint.apply_impulse(bodies);
+            }
+        }
+
         // Integrate Velocities.
-        for b in &mut self.bodies {
+        for b in bodies {
             b.position += dt * b.velocity;
             b.rotation += dt * b.angular_velocity;
 
@@ -63,10 +175,17 @@ impl World {
             b.torque = 0.0;
         }
     }
+}
 
-    // TODO: later
-    // - pre-step contacts/joints using inv_dt
-    // - iterative solver loop using self.iterations
+pub fn bodies_two_mut(bodies: &mut [Body], a: BodyHandle, b: BodyHandle) -> (&mut Body, &mut Body) {
+    assert!(a != b, "bodies_two_mut called with identical handles");
+
+    let (i, j) = if a.0 <= b.0 { (a.0, b.0) } else { (b.0, a.0) };
+    let (left, right) = bodies.split_at_mut(j);
+    let bi = &mut left[i];
+    let bj = &mut right[0];
+
+    if a.0 < b.0 { (bi, bj) } else { (bj, bi) }
 }
 
 // All tests are written by ChatGPT 5.2.

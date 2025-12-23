@@ -6,7 +6,7 @@ pub struct BodyDef {
     pub position: Vec2,
     pub rotation: f32,
     pub friction: f32,
-    pub mass: Option<f32>, // None => statc
+    pub mass: Option<f32>, // None => static
 }
 
 impl Default for BodyDef {

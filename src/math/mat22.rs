@@ -43,7 +43,7 @@ impl Mat22 {
         );
 
         let det = 1.0 / det;
-        Self::new(Vec2::new(det * d, -det * c), Vec2::new(-det * b, det * a))
+        Self::new(Vec2::new(det * d, -det * b), Vec2::new(-det * c, det * a))
     }
 
     #[inline]
