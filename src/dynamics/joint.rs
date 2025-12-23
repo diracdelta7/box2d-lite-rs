@@ -38,6 +38,33 @@ pub struct Joint {
 
 impl Joint {
     #[inline]
+    pub fn endpoints(&self, world: &World) -> (Vec2, Vec2) {
+        let b1 = world.body(self.body1);
+        let b2 = world.body(self.body2);
+
+        let r1 = Mat22::from_angle(b1.rotation) * self.local_anchor1;
+        let r2 = Mat22::from_angle(b2.rotation) * self.local_anchor2;
+
+        (b1.position + r1, b2.position + r2)
+    }
+
+    #[inline]
+    pub fn body_centers_and_anchors(&self, world: &World) -> (Vec2, Vec2, Vec2, Vec2) {
+        let b1 = world.body(self.body1);
+        let b2 = world.body(self.body2);
+
+        let r1 = Mat22::from_angle(b1.rotation) * self.local_anchor1;
+        let r2 = Mat22::from_angle(b2.rotation) * self.local_anchor2;
+
+        let x1 = b1.position;
+        let x2 = b2.position;
+        let p1 = x1 + r1;
+        let p2 = x2 + r2;
+
+        (x1, p1, x2, p2)
+    }
+
+    #[inline]
     pub fn from_def(world: &World, def: JointDef) -> Self {
         let b1 = world.body(def.body1);
         let b2 = world.body(def.body2);

@@ -182,7 +182,10 @@ pub fn collide(
     let rot_at = rot_a.transpose();
     let rot_bt = rot_b.transpose();
 
-    let dp = pos_a - pos_b;
+    // IMPORTANT: dp points from A to B.
+    // The rest of the SAT/clipping math (da/db sign tests and resulting normals)
+    // assumes this direction, matching the original Box2D-Lite implementation.
+    let dp = pos_b - pos_a;
     let da = rot_at * dp;
     let db = rot_bt * dp;
 
@@ -206,30 +209,36 @@ pub fn collide(
 
     // Box A faces
     let mut axis = Axis::FaceAX;
-    let mut separation = face_a.x;
+    // Track the maximum penetration axis. We don't need the value later, only
+    // the comparisons while selecting the best axis.
+    let mut best_sep = face_a.x;
     let mut normal = if da.x > 0.0 { rot_a.col1 } else { -rot_a.col1 };
 
     let relative_tol: f32 = 0.95;
     let absolute_tol: f32 = 0.01;
 
-    if face_a.y > relative_tol * separation + absolute_tol * ha.y {
+    if face_a.y > relative_tol * best_sep + absolute_tol * ha.y {
         axis = Axis::FaceAY;
-        separation = face_a.y;
+        best_sep = face_a.y;
         normal = if da.y > 0.0 { rot_a.col2 } else { -rot_a.col2 };
     }
 
     // Box B faces
-    if face_b.x > relative_tol * separation + absolute_tol * hb.x {
+    if face_b.x > relative_tol * best_sep + absolute_tol * hb.x {
         axis = Axis::FaceBX;
-        separation = face_b.x;
+        best_sep = face_b.x;
         normal = if db.x > 0.0 { rot_b.col1 } else { -rot_b.col1 };
     }
 
-    if face_b.y > relative_tol * separation + absolute_tol * hb.y {
+    if face_b.y > relative_tol * best_sep + absolute_tol * hb.y {
         axis = Axis::FaceBY;
-        separation = face_b.y;
+        best_sep = face_b.y;
         normal = if db.y > 0.0 { rot_b.col2 } else { -rot_b.col2 };
     }
+
+    // `best_sep` is only used for choosing the axis; keep a debug-use so builds
+    // with warnings-as-errors don't trip on unused assignments.
+    debug_assert!(best_sep <= 0.0);
 
     // Setup clipping plane data based on the separating axis
     let front_normal: Vec2;
