@@ -111,7 +111,7 @@ impl World {
                         }
                         Entry::Occupied(mut e) => {
                             let arb = e.get_mut();
-                            arb.update(&new_arb.contacts, self.config.warm_starting);
+                            arb.update(&new_arb.contacts[..new_arb.num_contacts], self.config.warm_starting);
                         }
                     }
                 } else {
